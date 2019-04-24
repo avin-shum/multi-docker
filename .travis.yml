@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t avinshum/react-test -f ./client/Dockerfile.build ./client
+
+script:
+  - docker run avinshum/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t skylighter/multi-client ./client
+  - docker build -t skylighter/multi-nginx ./nginx
+  - docker build -t skylighter/multi-server ./server
+  - docker build -t skylighter/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those image and push them to docker hub
+  - docker push skylighter/multi-client
+  - docker push skylighter/multi-nginx
+  - docker push skylighter/multi-server
+  - docker push skylighter/multi-worker
